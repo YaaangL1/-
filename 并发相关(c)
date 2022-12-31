@@ -1,0 +1,22 @@
+package main
+
+import "fmt"
+
+func main() {
+	var n  = 10
+	ch := make(chan int,n)//带有n个缓存的管道
+
+	// 开启n个协程
+	for i := 0; i < cap(ch); i++ {
+		go func(){
+			fmt.Println("我是协程")
+			ch <- 1
+		}()
+	}
+
+	//等待所有协程完成
+	//每一个协程打印完毕后才能进行一次循环，否则会因为管道堵塞而停下
+	for i := 0; i < cap(ch); i++ {
+		<-ch
+	}
+}
