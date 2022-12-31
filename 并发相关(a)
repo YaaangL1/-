@@ -1,0 +1,20 @@
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+//原代码中主协程结束过快导致匿名函数中的语句还没得到执行
+//也就是说匿名函数协程中的上锁操作还未执行便执行了解锁操作导致报错
+//可以在主协程中添加Sleep操作使其正常执行
+
+func main() {
+	var mu sync.Mutex
+	go func() {
+		fmt.Println("有点强人锁男")
+		mu.Lock()
+	}()
+	//time.Sleep(2 * time.Second)
+	mu.Unlock()
+}
