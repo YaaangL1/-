@@ -1,0 +1,15 @@
+package main
+
+import "fmt"
+
+func main() {
+	//make一个无缓冲channel
+	ch := make(chan int)
+	go func() {
+		fmt.Println("下山的路又堵起了")
+		//协程执行完毕后往管道写入一个数据使得主协程管道可以读取
+		ch <- 1
+	}()
+	//如果协程未执行完毕则主协程读取空管道导致堵塞
+	<-ch
+}
