@@ -1,0 +1,69 @@
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	var (
+		numOFgoroutine int                               //调用同一个协程的次数
+		numChan        = make(chan int, 1000000)         // 录入数据的管道
+		resultChan     = make(chan int, 100000)          // 存放结果的管道
+		exitChan       = make(chan bool, numOFgoroutine) // 判断resultChan是否可以关闭
+	)
+
+	//录入数据和判断分为两个协程进行
+	go inputNum(numChan)
+
+	//高并发判断
+
+	numOFgoroutine = 100 //协程数量
+	for j := 0; j < numOFgoroutine; j++ {
+		go isPrime(numChan, resultChan, exitChan)
+	}
+	//判断是否所有协程都执行完毕,然后关闭resultChan，避免主协程死锁
+	go func() {
+		for i := 1; i <= numOFgoroutine; i++ {
+			<-exitChan
+		}
+		close(resultChan)
+	}()
+
+	//与此同时进行输出
+	for {
+		prime, ok := <-resultChan
+		if ok != true {
+			break
+		}
+		fmt.Println(prime)
+	}
+}
+
+func inputNum(numChan chan int) {
+	// 向管道中录入所有数据，如果录入数据慢了则会堵塞等待数据录入管道
+	for i := 2; i <= cap(numChan); i++ {
+		numChan <- i
+	}
+	// 关闭管道，只能读取
+	close(numChan)
+}
+
+func isPrime(numChan chan int, resultChan chan int, exitChan chan bool) {
+	for j := 0; j < len(numChan); j++ {
+		// 将数据一个一个录入
+		num := <-numChan
+
+		var prime = true
+		// 判断每一个数
+		for i := 2; i < num; i++ {
+			if num%i == 0 {
+				prime = false
+			}
+		}
+		if prime {
+			resultChan <- num
+		}
+	}
+	//向exitChan中传入一个bool值表示该协程执行完毕
+	exitChan <- true
+}
