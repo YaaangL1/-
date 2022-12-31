@@ -1,0 +1,19 @@
+package main
+
+import "fmt"
+
+// 代码运行到输出a/b的时候由于除数是0引发了panic导致程序崩溃，无法执行下一句
+// 想要不改变a、b的值正常执行下一句只需要将其放到前面defer运行
+func main() {
+	a := 2
+	b := 0
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+		}
+	}()
+
+	defer fmt.Println("3/2 =", 3/2)
+
+	fmt.Println("2/0=", a/b)
+}
